@@ -1,0 +1,225 @@
+{% extends "base.html" %} {% block title %}Track Your Bus{% endblock %} {% block
+extra_head %}
+<style>
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+  }
+
+  .form-row input {
+    flex: 1 1 200px;
+    padding: 0.7rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+
+  .form-row button {
+    background: linear-gradient(to right, #1976d2, #512da8);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.7rem 1.5rem;
+    transition: background 0.3s;
+  }
+
+  .form-row button:hover {
+    opacity: 0.9;
+  }
+
+  .bus-list h3 {
+    color: var(--primary);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .bus-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .bus-list li {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-radius: 6px;
+  }
+
+  .bus-list li:hover {
+    background: #f0f4fa;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .on-time {
+    background: var(--on-time);
+  }
+
+  .delayed {
+    background: var(--delayed);
+  }
+
+  #map {
+    width: 100%;
+    height: 400px;
+    border-radius: 10px;
+    background: #e0e0e0;
+    margin-top: 1.5rem;
+  }
+
+  @media (max-width: 650px) {
+    .form-row {
+      flex-direction: column;
+    }
+    #map {
+      height: 250px;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <form
+    id="trackForm"
+    onsubmit="event.preventDefault(); searchBuses();"
+  >
+    <div class="form-row">
+      <input
+        type="text"
+        id="busNumber"
+        placeholder="Enter Bus Number"
+      />
+      <input
+        type="text"
+        id="source"
+        placeholder="Source"
+      />
+      <input
+        type="text"
+        id="destination"
+        placeholder="Destination"
+      />
+      <button type="submit">Track</button>
+    </div>
+  </form>
+
+  <div class="bus-list">
+    <h3>Available Buses</h3>
+    <ul id="busList">
+      <!-- Bus results will appear here -->
+    </ul>
+  </div>
+
+  <div id="map">Map loading...</div>
+</div>
+
+<script>
+  let busesData = [];
+  let markers = {};
+  let map, markerIcon;
+
+  function initMap() {
+    map = L.map('map').setView([28.6139, 77.209], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+    markerIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61231.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    });
+  }
+
+  initMap();
+
+  async function searchBuses() {
+    const busNumber = document.getElementById('busNumber').value.trim();
+    const source = document.getElementById('source').value.trim();
+    const destination = document.getElementById('destination').value.trim();
+
+    let url = '/api/buses/?';
+    if (busNumber) url += `bus_number=${encodeURIComponent(busNumber)}&`;
+    if (source) url += `source=${encodeURIComponent(source)}&`;
+    if (destination) url += `destination=${encodeURIComponent(destination)}&`;
+
+    const response = await fetch(url);
+    busesData = await response.json();
+    renderBusList();
+    updateAllBusMarkers();
+  }
+
+  function renderBusList() {
+    const list = document.getElementById('busList');
+    list.innerHTML = '';
+    if (busesData.length === 0) {
+      list.innerHTML = '<li>No buses found for your query.</li>';
+      return;
+    }
+    busesData.forEach((bus) => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span>
+          <span class="status-dot ${
+            bus.is_delayed ? 'delayed' : 'on-time'
+          }"></span>
+          ${bus.name} (${bus.number})
+        </span>
+        <span>${
+          bus.eta ? 'ETA: ' + bus.eta : bus.is_delayed ? 'Delayed' : 'On time'
+        }</span>
+      `;
+      li.onclick = () => focusBusOnMap(bus);
+      list.appendChild(li);
+    });
+  }
+
+  function focusBusOnMap(bus) {
+    if (bus.latitude && bus.longitude) {
+      map.setView([bus.latitude, bus.longitude], 15);
+      if (markers[bus.number]) {
+        markers[bus.number].openPopup();
+      }
+    }
+  }
+
+  function updateAllBusMarkers() {
+    Object.values(markers).forEach((marker) => map.removeLayer(marker));
+    markers = {};
+    busesData.forEach((bus) => {
+      if (bus.latitude && bus.longitude) {
+        const marker = L.marker([bus.latitude, bus.longitude], {
+          icon: markerIcon,
+        })
+          .addTo(map)
+          .bindPopup(
+            `<b>${bus.name} (${bus.number})</b><br>${
+              bus.eta
+                ? 'ETA: ' + bus.eta
+                : bus.is_delayed
+                ? 'Delayed'
+                : 'On time'
+            }`
+          );
+        markers[bus.number] = marker;
+      }
+    });
+  }
+
+  window.onload = searchBuses;
+</script>
+{% endblock %}

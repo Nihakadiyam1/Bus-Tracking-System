@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Login | Where Is My Bus</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #1976d2, #512da8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #333;
+      }
+
+      .card {
+        background: #fff;
+        padding: 2.5rem 2.8rem;
+        border-radius: 16px;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        max-width: 400px;
+        width: 100%;
+      }
+
+      h2 {
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: #1976d2;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-weight: 600;
+      }
+
+      input[type='text'],
+      input[type='password'] {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+      }
+
+      input:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+      }
+
+      button {
+        margin-top: 1rem;
+        width: 100%;
+        background-color: #1976d2;
+        color: #fff;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #145ea8;
+      }
+
+      .register-link {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 0.95rem;
+      }
+
+      .register-link a {
+        color: #512da8;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .register-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Login to Track Bus</h2>
+      <form
+        method="POST"
+        action="/login"
+      >
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+          />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+      <div class="register-link">
+        New user? <a href="/register/">Register here</a>
+      </div>
+    </div>
+  </body>
+</html>
